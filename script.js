@@ -1,80 +1,58 @@
-//your code here
-
-const cardArea = document.getElementById("card-area");
+// Get the cardholders
 const cardholders = {
   spade: document.getElementById("spade-holder"),
   diamond: document.getElementById("diamond-holder"),
   clubs: document.getElementById("clubs-holder"),
   hearts: document.getElementById("hearts-holder"),
 };
-const restartButton = document.getElementById("restart-button");
 
-// Add 52 cards to the card area
-for (let i = 1; i <= 52; i++) {
-  const card = document.createElement("div");
-  card.classList.add("card");
-  card.setAttribute("draggable", true);
-  card.innerText = i;
-  cardArea.appendChild(card);
-}
-
-// Add draggable event listeners to cards
-const cards = document.querySelectorAll(".card");
-cards.forEach((card) => {
-  card.addEventListener("dragstart", (event) => {
-    event.dataTransfer.setData("text", event.target.innerText);
-  });
-});
-
-// Add drop event listeners to cardholders
+// Add event listeners to each cardholder to allow for dropping cards
 Object.values(cardholders).forEach((holder) => {
   holder.addEventListener("dragover", (event) => {
     event.preventDefault();
   });
   holder.addEventListener("drop", (event) => {
     event.preventDefault();
-    const cardNumber = event.dataTransfer.getData("text");
-    const card = document.querySelector(`.card:nth-child(${cardNumber})`);
+    const card = document.getElementById(event.dataTransfer.getData("text"));
     if (holder.id.includes(card.innerText[0].toLowerCase())) {
       holder.appendChild(card);
+      checkWin();
     }
   });
 });
 
-// check if all cards are in the right cardholder
-const checkWin = () => {
-  let totalCards = 0;
-  let correctCards = 0;
+// Add draggable event listeners to cards
+const cards = document.querySelectorAll(".card");
+cards.forEach((card) => {
+  card.addEventListener("dragstart", (event) => {
+    event.dataTransfer.setData("text", event.target.id);
+  });
+});
+
+// Check if all cards have been placed in the correct cardholder
+function checkWin() {
+  const cardsInPlace = [...cardholders.spade.children, ...cardholders.diamond.children, ...cardholders.clubs.children, ...cardholders.hearts.children];
+  if (cardsInPlace.length === 52) {
+    // Show the restart button
+    restartButton.classList.remove("hide");
+  }
+}
+
+// Add event listener to the restart button to shuffle cards
+restartButton.addEventListener("click", () => {
+  // Shuffle the cards
+  for (let i = 0; i < 52; i++) {
+    const randomIndex = Math.floor(Math.random() * 52);
+    const currentCard = cards[i];
+    const randomCard = cards[randomIndex];
+    deck.insertBefore(randomCard, currentCard);
+  }
+  // Clear the cardholders
   Object.values(cardholders).forEach((holder) => {
-    totalCards += holder.children.length;
-    correctCards += holder.children.length;
+    while (holder.firstChild) {
+      holder.removeChild(holder.firstChild);
+    }
   });
-  if (totalCards === 52) {
-    restartButton.style.display = "block";
-    restartButton.addEventListener("click", () => {
-      restart();
-    });
-  }
-};
-
-// shuffle cards
-const restart = () => {
-  restartButton.style.display = "none";
-  let cardsArr = Array.from(cards);
-  cardsArr.forEach((card) => {
-    card.remove();
-  });
-  cardsArr = shuffle(cardsArr);
-  cardsArr.forEach((card) => {
-    cardArea.appendChild(card);
-  });
-};
-
-// shuffle function
-const shuffle = (array) => {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-};
+  // Hide the restart button
+  restartButton.classList.add("hide");
+});
